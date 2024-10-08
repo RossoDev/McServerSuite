@@ -20,18 +20,8 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Debug Node.js version and path
-        run: |
-          node -v
-          which node
-          npm -v
-
       - name: Build Electron app
         run: npm run build -- -mwl
-
-      - name: Check Build Directory
-        run: |
-          ls -al ./dist
 
       - name: Get app version
         id: get_version
@@ -72,3 +62,12 @@ jobs:
           asset_path: ./dist/*.exe
           asset_name: McServerSuite-windows-${{ env.version }}.exe
           asset_content_type: application/x-msdownload
+
+      - name: Upload Windows Portable ZIP
+        if: success() && env.version != ''
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./dist/McServerSuite.Portable.${{ env.version }}.zip
+          asset_name: McServerSuite.Portable.${{ env.version }}.zip
+          asset_content_type: application/zip
