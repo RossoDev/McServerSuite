@@ -1,0 +1,52 @@
+name: Build Electron App
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build Electron app
+        run: npm run build -- -mwl
+
+      - name: Get app version
+        id: get_version
+        run: echo "::set-output name=version::$(node -p \"require('./package.json').version\")"
+
+      - name: Upload macOS DMG
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./dist/*.dmg 
+          asset_name: McServerSuite-mac-${{ steps.get_version.outputs.version }}.dmg
+          asset_content_type: application/x-diskcopy
+
+      - name: Upload Linux AppImage
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./dist/*.AppImage
+          asset_name: McServerSuite-linux-${{ steps.get_version.outputs.version }}.AppImage
+          asset_content_type: application/octet-stream
+
+      - name: Upload Linux tar.gz (portable version)
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./dist/*.tar.gz 
+          asset_name: McServerSuite-linux-portable-${{ steps.get_version.outputs.version }}.tar.gz
+          asset_content_type: application/gzip
